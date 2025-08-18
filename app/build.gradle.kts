@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "bf.uv.persistance"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "bf.uv.persistance"
