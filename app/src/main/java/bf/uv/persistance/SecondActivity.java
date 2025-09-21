@@ -18,6 +18,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.List;
+import java.util.concurrent.Executors;
+
 public class SecondActivity extends AppCompatActivity {
     EditText nom_field ,email_field ,tel_field ,password_field ;
     public static final String TAG= "Etapes actuelle";
@@ -41,13 +44,16 @@ public class SecondActivity extends AppCompatActivity {
             String tel = tel_field.getText().toString().trim();
             String password = password_field.getText().toString().trim();
 
+            saveToRoom(name, email, tel, password); // <-- persiste en base
+
             Toast.makeText(this, "Données enregistrées", Toast.LENGTH_SHORT).show();
 
-            Log.d(TAG,"Save successfully in prefs");
+            Log.d(TAG,"Save successfully in Database");
 
         });
 
         Button btn2 = findViewById(R.id.button2);
+        loadUsers();
         btn2.setOnClickListener(v -> {
 
             Log.d(TAG,"Boutton clicker dans lapp pour migrer vers la second Activity");
@@ -88,5 +94,35 @@ public class SecondActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG,"onDestroy appelle par lapp");
+    }
+
+    private void saveToRoom(String name, String email, String phone, String password) {
+        AppDatabase db = DbProvider.get(this);
+        Executors.newSingleThreadExecutor().execute(() -> {
+            User u = new User();
+            u.name = name;
+            u.email = email;
+            u.phone = phone;
+            u.password=password;
+            u.createdAt = System.currentTimeMillis();
+
+            long id = db.userDao().insert(u);
+
+            runOnUiThread(() ->
+                    Toast.makeText(this, "Utilisateur enregistré (id=" + id + ")",
+                            Toast.LENGTH_SHORT).show()
+            );
+        });
+    }
+
+    private void loadUsers() {
+        AppDatabase db = DbProvider.get(this);
+        Executors.newSingleThreadExecutor().execute(() -> {
+            List<User> users = db.userDao().getAll();
+            runOnUiThread(() -> {
+                // TODO: afficher dans un RecyclerView
+                Log.d("DB", "Users count=" + users.size());
+            });
+        });
     }
 }
